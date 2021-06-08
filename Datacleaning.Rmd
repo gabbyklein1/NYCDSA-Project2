@@ -1,0 +1,86 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+library(dplyr)
+df <- read.csv(file = 'car_insurance_claim.csv')
+```
+
+```{r}
+names(df)
+
+```
+```{r}
+#cleaning data- convert to dates, covert char dollars to numeric, binarize categorical
+#gender- 1=M
+#Education 1=<HS, 2=HS, 3=Bachelors, 4=Masters, 5= PhD
+#URBANICITY= 1=urban,0 = rural
+
+df=df %>%
+  mutate(BIRTH=as.Date(paste(substr(BIRTH,1,5),"19",substr(BIRTH,6,7),sep=''), "%d%b%Y" ))
+df$INCOME=as.numeric(gsub('\\$|,', '', df$INCOME))
+df$PARENT1[df$PARENT1=="Yes"]=1
+df$PARENT1[df$PARENT1=="No"]=0
+df$AGE=as.numeric(df$AGE)
+df$YOJ=as.numeric(df$YOJ)
+df$TRAVTIME=as.numeric(df$TRAVTIME)
+df$TIF=as.numeric(df$TIF)
+df$CLM_FREQ=as.numeric(df$CLM_FREQ)
+df$MVR_PTS=as.numeric(df$MVR_PTS)
+df$CAR_AGE=as.numeric(df$CAR_AGE)
+df$HOME_VAL=as.numeric(gsub('\\$|,', '', df$HOME_VAL))
+df$MSTATUS[df$MSTATUS=="Yes"]=1
+df$MSTATUS[df$MSTATUS=="z_No"]=0
+df$GENDER[df$GENDER=="M"]=1
+df$GENDER[df$GENDER=="z_F"]=0
+df$EDUCATION=factor(df$EDUCATION, levels = c("<High School", "z_High School", "Bachelors","Masters","PhD"))
+df=df%>% mutate(EDUCATIONBINARY=ifelse(EDUCATION=="<High School" | EDUCATION=="z_High School" , 0,1))
+df$OCCUPATION=factor(df$OCCUPATION, levels = c("Professional",  "z_Blue Collar", "Manager"  ,"Clerical"   ,   "Doctor"   ,     "Lawyer" , "Home Maker" ,   "Student"  ))
+df$CAR_USE=factor(df$CAR_USE)
+df$BLUEBOOK=as.numeric(gsub('\\$|,', '', df$BLUEBOOK))
+df$CAR_TYPE=factor(df$CAR_TYPE)
+df$RED_CAR[df$RED_CAR=="yes"]=1
+df$RED_CAR[df$RED_CAR=="no"]=0
+df$OLDCLAIM=as.numeric(gsub('\\$|,', '', df$OLDCLAIM))
+df$REVOKED[df$REVOKED=="Yes"]=1
+df$REVOKED[df$REVOKED=="No"]=0
+df$CLM_AMT=as.numeric(gsub('\\$|,', '', df$CLM_AMT))
+df$URBANICITY[df$URBANICITY=="Highly Urban/ Urban"]=1
+df$URBANICITY[df$URBANICITY=="z_Highly Rural/ Rural"]=0
+df= mutate(df,OLDCLAIMBINARY=ifelse(OLDCLAIM>0,1,0))
+df$REVOKED=as.numeric(df$REVOKED)
+df$KIDSDRIV=factor(df$KIDSDRIV)
+df=(mutate(df,KIDSDRIVBINARY=ifelse(KIDSDRIV==0,0,1)))
+df$KIDSDRIVBINARY=as.factor(df$KIDSDRIVBINARY)
+df$OLDCLAIMBINARY=as.factor(df$OLDCLAIMBINARY)
+df$EDUCATIONBINARY=as.factor(df$EDUCATIONBINARY)
+df$URBANICITY=as.factor(df$URBANICITY)
+df$REVOKED=as.factor(df$REVOKED)
+df$RED_CAR=as.factor(df$RED_CAR)
+df$GENDER=as.factor(df$GENDER)
+df$MSTATUS=as.factor(df$MSTATUS)
+df$PARENT1=as.factor(df$PARENT1)
+df=(mutate(df,HOMEBINARY=ifelse(HOME_VAL==0,0,1)))
+df$HOMEBINARY=as.factor(df$HOMEBINARY)
+df$CLAIM_FLAG=as.factor(df$CLAIM_FLAG)
+
+```
+
+```{r}
+#for each attrribute what graphs- hist w and wo outliers, scatterplot w clm amount
+ggplot(df[(df$CLM_AMT<summary(df$CLM_AMT)[[5]]) & (df$CLM_AMT>summary(df$CLM_AMT)[[2]]),], aes(x=CLM_AMT)) + 
+  geom_histogram()
+
+ggplot(df[(df$CLM_AMT<summary(df$CLM_AMT)[[5]]) & (df$CLM_AMT>summary(df$CLM_AMT)[[2]]),], aes(x = KIDSDRIV,y = CLM_AMT))  + geom_boxplot(aes(group = KIDSDRIV))
+
+ggplot(df, aes(x=OLDCLAIM, y=CLM_AMT)) +
+  geom_point()
+ggplot(df, aes(x=OLDCLAIM)) + 
+  geom_histogram()
+```
+```
+
+
